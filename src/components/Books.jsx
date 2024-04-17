@@ -1,12 +1,25 @@
 import { useQuery } from "@apollo/client";
 import { GET_BOOKS } from "../queries";
 
-const Books = (props) => {
-  const res = useQuery(GET_BOOKS);
+const Books = () => {
+  const res = useQuery(GET_BOOKS, {
+    variables: {
+      author: null,
+      genre: null,
+    },
+  });
+  const { loading, error, data, refetch } = useQuery(GET_BOOKS, {
+    variables: {
+      author: null,
+      genre: null,
+    },
+  });
 
-  if (res.loading) {
+  if (loading) {
     return <div>loading books...</div>;
   }
+
+  const genres = [...new Set(res.data.allBooks.map((b) => b.genres).flat())];
 
   return (
     <div>
@@ -18,15 +31,25 @@ const Books = (props) => {
             <th>author</th>
             <th>published</th>
           </tr>
-          {res.data.allBooks.map((a) => (
+          {data.allBooks.map((a) => (
             <tr key={a.id}>
               <td>{a.title}</td>
-              <td>{a.author}</td>
+              <td>{a.author.name}</td>
               <td>{a.published}</td>
             </tr>
           ))}
         </tbody>
       </table>
+      <div>
+        {genres.map((genre) => (
+          <button key={genre} onClick={() => refetch({ author: null, genre })}>
+            {genre}
+          </button>
+        ))}
+        <button onClick={() => refetch({ author: null, genre: null })}>
+          all genres
+        </button>
+      </div>
     </div>
   );
 };

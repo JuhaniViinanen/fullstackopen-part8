@@ -8,9 +8,23 @@ const NewBook = () => {
   const [published, setPublished] = useState("");
   const [genre, setGenre] = useState("");
   const [genres, setGenres] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const [addBook, { loading, error }] = useMutation(CREATE_BOOK, {
-    refetchQueries: [{ query: GET_BOOKS }, { query: ALL_AUTHORS }],
+  const [addBook, { loading }] = useMutation(CREATE_BOOK, {
+    refetchQueries: [
+      { query: GET_BOOKS, variables: { author: null, genre: null } },
+      { query: ALL_AUTHORS },
+    ],
+    onError: ({ networkError, graphQLErrors }) => {
+      if (networkError) {
+        setErrorMessage(networkError.message);
+      } else {
+        setErrorMessage(graphQLErrors.map((e) => e.message).join("\n"));
+      }
+      setTimeout(() => {
+        setErrorMessage("");
+      }, 10000);
+    },
   });
 
   const submit = (event) => {
@@ -42,7 +56,7 @@ const NewBook = () => {
   return (
     <div>
       <div style={{ padding: "1em", color: "red", whiteSpace: "pre-wrap" }}>
-        {error && error.graphQLErrors.map((e) => e.message).join("\n")}
+        {errorMessage}
       </div>
       <form onSubmit={submit}>
         <div>

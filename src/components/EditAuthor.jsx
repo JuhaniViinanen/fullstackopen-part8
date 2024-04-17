@@ -5,14 +5,23 @@ import { EDIT_AUTHOR } from "../queries";
 const EditAuthor = ({ authors }) => {
   const [name, setName] = useState(authors[0].name);
   const [born, setBorn] = useState("");
-  const [manualError, setManualError] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const [editAuthor, { data, loading, error }] = useMutation(EDIT_AUTHOR);
+  const [editAuthor, { data, loading, error }] = useMutation(EDIT_AUTHOR, {
+    onError: ({ networkError, graphQLErrors }) => {
+      if (networkError) {
+        setErrorMessage(networkError.message);
+      } else {
+        setErrorMessage(graphQLErrors.map((e) => e.message).join("\n"));
+      }
+      setTimeout(() => setErrorMessage(""), 10000);
+    },
+  });
 
   useEffect(() => {
     if (data && data.editAuthor === null) {
-      setManualError("No such author found.");
-      setTimeout(() => setManualError(""), 5000);
+      setErrorMessage("No such author found.");
+      setTimeout(() => setErrorMessage(""), 10000);
     }
   }, [data]);
 
@@ -35,8 +44,7 @@ const EditAuthor = ({ authors }) => {
     <div>
       <h2>Edit authors</h2>
       <div style={{ padding: "1em", color: "red", whiteSpace: "pre-wrap" }}>
-        {error && error.graphQLErrors.map((e) => e.message).join("\n")}
-        {manualError}
+        {errorMessage}
       </div>
       <form onSubmit={submit}>
         <div>
