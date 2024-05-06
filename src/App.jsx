@@ -1,5 +1,6 @@
 import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
-import { useApolloClient } from "@apollo/client";
+import { useApolloClient, useSubscription } from "@apollo/client";
+import { BOOK_ADDED, GET_BOOKS } from "./queries";
 import Authors from "./components/Authors";
 import Books from "./components/Books";
 import NewBook from "./components/NewBook";
@@ -17,6 +18,20 @@ function App() {
   useEffect(() => {
     setToken(window.localStorage.getItem("usertoken"));
   }, [window.localStorage.getItem("usertoken")]);
+
+  useSubscription(BOOK_ADDED, {
+    onData: ({ data, client }) => {
+      window.alert(`New book added\n${data.data.bookAdded.title}`);
+      client.cache.updateQuery(
+        { query: GET_BOOKS, variables: { author: null, genre: null } },
+        ({ allBooks }) => {
+          return {
+            allBooks: allBooks.concat(data.data.bookAdded),
+          };
+        }
+      );
+    },
+  });
 
   const logout = () => {
     setToken(null);
